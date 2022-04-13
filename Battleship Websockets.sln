@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32228.343
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Battleship Websockets", "Battleship Websockets\Battleship Websockets.csproj", "{15E06DDA-08BA-4EE5-A268-BE180909A7BB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{15E06DDA-08BA-4EE5-A268-BE180909A7BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{15E06DDA-08BA-4EE5-A268-BE180909A7BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{15E06DDA-08BA-4EE5-A268-BE180909A7BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{15E06DDA-08BA-4EE5-A268-BE180909A7BB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {917D71F4-4226-4D0C-BB06-58CCA9EBD60D}
+	EndGlobalSection
+EndGlobal
