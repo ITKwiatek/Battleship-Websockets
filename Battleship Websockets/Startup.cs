@@ -1,14 +1,17 @@
+using Battleship_Websockets.Middleware;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using Microsoft.EntityFrameworkCore;
+
 
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
-
+using Battleship_Websockets.Data;
 
 namespace Battleship_Websockets
 {
@@ -23,58 +26,27 @@ namespace Battleship_Websockets
 
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddRazorPages();
+            services.AddWebSocketManager();
+
+            services.AddDbContext<GameDBContext>(options =>
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("DefaultConnection")));
+            services.AddScoped<IGameRepository, GameRepository>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseWebSockets();
 
-            app.Use(async (context, next) =>
-            {
-                if (context.WebSockets.IsWebSocketRequest)
-                {
-                    System.Diagnostics.Debug.WriteLine("is WS");
-                    WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                    System.Diagnostics.Debug.WriteLine("Connected");
+            app.UseWebSocketServer();
 
-                    await ReceiveMessage(webSocket, async (result, buffer) =>
-                    {
-                        if(result.MessageType == WebSocketMessageType.Text)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Received message");
-                        }
-                        else if(result.MessageType == WebSocketMessageType.Close)
-                        {
-                            System.Diagnostics.Debug.WriteLine("Received close message");
-                            return;
-                        }
-                    });
-                }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine("not WS");
-                    await next();
-                }
-            });
-
-            app.Run(async context =>
-            {
-                System.Diagnostics.Debug.WriteLine("3rd request delegate");
-            });
+            //app.Run(async context =>
+            //{
+            //    System.Diagnostics.Debug.WriteLine("3rd request delegate");
+            //});
         }
 
-        private async Task ReceiveMessage(WebSocket socket, Action<WebSocketReceiveResult, byte[]> handleMessage)
-        {
-            var buffer = new byte[1024 * 4];
-            while(socket.State == WebSocketState.Open)
-            {
-                var result = await socket.ReceiveAsync(buffer: new ArraySegment<byte>(buffer),
-                    cancellationToken: CancellationToken.None);
-
-                handleMessage(result, buffer);
-            }
-        }
+       
         //public void WriteRequestParam(HttpContext context)
         //{
         //    System.Diagnostics.Debug.WriteLine("Re");
