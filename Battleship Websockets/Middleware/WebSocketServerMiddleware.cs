@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Battleship_Websockets.Service;
+using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -24,7 +25,6 @@ namespace Battleship_Websockets.Middleware
         {
             if (context.WebSockets.IsWebSocketRequest)
             {
-                System.Diagnostics.Debug.WriteLine("is WS");
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
                 System.Diagnostics.Debug.WriteLine("Connected");
 
@@ -35,7 +35,11 @@ namespace Battleship_Websockets.Middleware
                 {
                     if (result.MessageType == WebSocketMessageType.Text)
                     {
-                        System.Diagnostics.Debug.WriteLine($"Received message {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
+                        var JSON = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                        var received = JsonConvert.DeserializeObject<dynamic>(JSON);
+                        string command = received.Command.ToString();
+                        var response = CommandService.RunCommand(command);
+                        //System.Diagnostics.Debug.WriteLine($"Received message {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
                         await RouteJSONMessageAsync(Encoding.UTF8.GetString(buffer, 0, result.Count));
                         return;
                     }
