@@ -7,6 +7,6 @@ namespace Battleship_Websockets.Model
 {
     public enum Orientation
     {
-        Horizonta, Vertical
+        Horizontal, Vertical
     }
 }

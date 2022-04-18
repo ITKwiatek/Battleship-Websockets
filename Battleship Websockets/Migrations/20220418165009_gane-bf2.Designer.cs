@@ -4,14 +4,16 @@ using Battleship_Websockets.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Battleship_Websockets.Migrations
 {
     [DbContext(typeof(GameDBContext))]
-    partial class GameDBContextModelSnapshot : ModelSnapshot
+    [Migration("20220418165009_gane-bf2")]
+    partial class ganebf2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -29,7 +31,7 @@ namespace Battleship_Websockets.Migrations
                     b.Property<int>("Columns")
                         .HasColumnType("int");
 
-                    b.Property<int>("GameId")
+                    b.Property<int?>("GameId")
                         .HasColumnType("int");
 
                     b.Property<int>("PlayerId")
@@ -39,6 +41,8 @@ namespace Battleship_Websockets.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("GameId");
 
                     b.ToTable("BattleFields");
                 });
@@ -83,6 +87,19 @@ namespace Battleship_Websockets.Migrations
                     b.ToTable("Games");
                 });
 
+            modelBuilder.Entity("Battleship_Websockets.Model.PlayerGameManyToMany", b =>
+                {
+                    b.Property<int>("GameId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PlayerId")
+                        .HasColumnType("int");
+
+                    b.HasKey("GameId", "PlayerId");
+
+                    b.ToTable("PlayerGameManyToMany");
+                });
+
             modelBuilder.Entity("Battleship_Websockets.Model.PlayerModel", b =>
                 {
                     b.Property<int>("Id")
@@ -111,16 +128,10 @@ namespace Battleship_Websockets.Migrations
                     b.Property<int>("ColumnBegin")
                         .HasColumnType("int");
 
-                    b.Property<int>("Length")
-                        .HasColumnType("int");
-
                     b.Property<int>("Orientation")
                         .HasColumnType("int");
 
                     b.Property<int>("RowBegin")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ShipType")
                         .HasColumnType("int");
 
                     b.Property<int>("State")
@@ -128,34 +139,34 @@ namespace Battleship_Websockets.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BattleFieldId");
+
                     b.ToTable("Ships");
                 });
 
             modelBuilder.Entity("Battleship_Websockets.Model.Ship.ShipPart", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("ColumnNumber")
+                    b.Property<int>("ShipId")
                         .HasColumnType("int");
 
                     b.Property<int>("Number")
                         .HasColumnType("int");
 
+                    b.Property<int>("ColumnNumber")
+                        .HasColumnType("int");
+
                     b.Property<int>("RowNumber")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ShipId")
+                    b.Property<int?>("ShipId1")
                         .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.HasKey("Id");
+                    b.HasKey("ShipId", "Number");
 
-                    b.HasIndex("ShipId");
+                    b.HasIndex("ShipId1");
 
                     b.ToTable("ShipParts");
                 });
@@ -191,6 +202,15 @@ namespace Battleship_Websockets.Migrations
                     b.ToTable("Shots");
                 });
 
+            modelBuilder.Entity("Battleship_Websockets.Model.BattleFieldModel", b =>
+                {
+                    b.HasOne("Battleship_Websockets.Model.GameModel", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId");
+
+                    b.Navigation("Game");
+                });
+
             modelBuilder.Entity("Battleship_Websockets.Model.GameModel", b =>
                 {
                     b.HasOne("Battleship_Websockets.Model.BattleFieldModel", "BattleField1")
@@ -206,11 +226,26 @@ namespace Battleship_Websockets.Migrations
                     b.Navigation("BattleField2");
                 });
 
+            modelBuilder.Entity("Battleship_Websockets.Model.Ship.ShipModel", b =>
+                {
+                    b.HasOne("Battleship_Websockets.Model.BattleFieldModel", null)
+                        .WithMany()
+                        .HasForeignKey("BattleFieldId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Battleship_Websockets.Model.Ship.ShipPart", b =>
                 {
+                    b.HasOne("Battleship_Websockets.Model.Ship.ShipModel", null)
+                        .WithMany()
+                        .HasForeignKey("ShipId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("Battleship_Websockets.Model.Ship.ShipModel", "Ship")
                         .WithMany("ShipParts")
-                        .HasForeignKey("ShipId");
+                        .HasForeignKey("ShipId1");
 
                     b.Navigation("Ship");
                 });

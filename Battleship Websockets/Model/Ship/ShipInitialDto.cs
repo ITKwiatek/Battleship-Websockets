@@ -9,5 +9,6 @@ namespace Battleship_Websockets.Model.Ship
     {
         public ShipTypes ShipType { get; set; }
         public int ShipCount { get; set; }
+        public Orientation Orientation { get; set; }
     }
 }

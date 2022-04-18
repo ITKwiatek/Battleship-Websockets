@@ -1,4 +1,5 @@
 ﻿using Battleship_Websockets.Model;
+using Battleship_Websockets.Model.Ship;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -10,9 +11,9 @@ namespace Battleship_Websockets.Data
     public class GameDBContext : DbContext
     {
         private readonly string _connectionString;
-        public GameDBContext(string connectionString)
+        public GameDBContext()
         {
-            _connectionString = connectionString;
+
         }
 
         public GameDBContext(DbContextOptions<GameDBContext> options)
@@ -20,7 +21,12 @@ namespace Battleship_Websockets.Data
         {
         }
 
-        DbSet<GameModel> Games { get; set; }
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlServer("Server=localhost,5435;Database=Battleship;Trusted_Connection=True;MultipleActiveResultSets=true");
+        }
+
+        public DbSet<GameModel> Games { get; set; }
         public DbSet<BattleFieldModel> BattleFields { get; set; }
         public DbSet<PlayerModel> Players { get; set; }
         public DbSet<ShipModel> Ships { get; set; }
@@ -33,12 +39,12 @@ namespace Battleship_Websockets.Data
 
             #region ManyKeys
             //PlayerGame ==> has 2 Keys
-            builder.Entity<PlayerGameManyToMany>()
-                .HasKey(pg => new { pg.GameId, pg.PlayerId });
+            //builder.Entity<PlayerGameManyToMany>()
+            //    .HasKey(pg => new { pg.GameId, pg.PlayerId });
 
             //ShipPart ==> has 2 Keys
-            builder.Entity<ShipPart>()
-                .HasKey(sp => new { sp.ShipId, sp.Number });
+            //builder.Entity<ShipPart>()
+            //    .HasKey(sp => new { sp.Ship.Id, sp.Number });
             #endregion ManyKeys
 
             #region Relations
@@ -46,24 +52,24 @@ namespace Battleship_Websockets.Data
 
             //BattleField1 - Game ==> BattleField1 has one Game
             //Game - BattleField1 ==> Game has one BattleField1
-            builder.Entity<BattleFieldModel>()
-                .HasOne<GameModel>()
-                .WithOne(g => g.BattleField1)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder.Entity<BattleFieldModel>()
+            //    .HasOne<GameModel>(b=>b.Game);
+
+
 
             ////BattleField2 - Game ==> BattleField2 has one Game
             ////Game - BattleField2 ==> Game has one BattleField2
-            builder.Entity<BattleFieldModel>()
-                .HasOne<GameModel>()
-                .WithOne(g => g.BattleField2)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder.Entity<BattleFieldModel>()
+            //    .HasOne<GameModel>()
+            //    .WithOne(g => g.BattleField2)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             //BattleField - Ship ==> BattleField has many Ships
             //Ship - BattleField ==> Ship has one BattleField
-            builder.Entity<BattleFieldModel>()
-                .HasMany<ShipModel>()
-                .WithOne()
-                .HasForeignKey(s => s.BattleFieldId);
+            //builder.Entity<BattleFieldModel>()
+            //    .HasMany<ShipModel>()
+            //    .WithOne()
+            //    .HasForeignKey(s => s.BattleFieldId);
 
             //BattleField - Shot ==> BattleField has many Shots
             //Shot - BattleField ==> Shot has many Battlefields
@@ -74,17 +80,17 @@ namespace Battleship_Websockets.Data
 
             //Game - Player1 ==> Game has one Player1
             //Player - Game  ==> Player has many games
-            builder.Entity<PlayerModel>()
-                .HasMany<GameModel>()
-                .WithOne(g => g.Player1)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder.Entity<PlayerModel>()
+            //    .HasMany<GameModel>()
+            //    .WithOne(g => g.Player1)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             ////Game - Player2 ==> Game has one Player2
             ////Player - Game  ==> Player has many games
-            builder.Entity<PlayerModel>()
-                .HasMany<GameModel>()
-                .WithOne(g => g.Player2)
-                .OnDelete(DeleteBehavior.Restrict);
+            //builder.Entity<PlayerModel>()
+            //    .HasMany<GameModel>()
+            //    .WithOne(g => g.Player2)
+            //    .OnDelete(DeleteBehavior.Restrict);
 
             //Player - Shot ==> Player has many Shots
             //Shot - Player ==> Shot has one Player
@@ -96,10 +102,10 @@ namespace Battleship_Websockets.Data
 
             //Ship - ShipPart ==> Ship has many ShipParts
             //ShipPart - Ship ==> ShipPart has one Ship
-            builder.Entity<ShipModel>()
-                .HasMany<ShipPart>()
-                .WithOne()
-                .HasForeignKey(sp => sp.ShipId);
+            //builder.Entity<ShipModel>()
+            //    .HasMany<ShipPart>()
+            //    .WithOne(s => s.Ship)
+            //    .HasForeignKey(s => s.)
 
 
 

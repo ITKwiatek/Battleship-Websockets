@@ -3,10 +3,26 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Battleship_Websockets.Migrations
 {
-    public partial class Relations : Migration
+    public partial class ganebf : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "BattleFields",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GameId = table.Column<int>(type: "int", nullable: false),
+                    PlayerId = table.Column<int>(type: "int", nullable: false),
+                    Rows = table.Column<int>(type: "int", nullable: false),
+                    Columns = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_BattleFields", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "PlayerGameManyToMany",
                 columns: table => new
@@ -24,7 +40,8 @@ namespace Battleship_Websockets.Migrations
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1")
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -42,53 +59,25 @@ namespace Battleship_Websockets.Migrations
                     PlayerTurn = table.Column<int>(type: "int", nullable: false),
                     Player1Id = table.Column<int>(type: "int", nullable: false),
                     Player2Id = table.Column<int>(type: "int", nullable: false),
-                    BattleField1Id = table.Column<int>(type: "int", nullable: false),
-                    BattleField2Id = table.Column<int>(type: "int", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    BattleField1Id = table.Column<int>(type: "int", nullable: true),
+                    BattleField2Id = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Games", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Games_Players_Player1Id",
-                        column: x => x.Player1Id,
-                        principalTable: "Players",
+                        name: "FK_Games_BattleFields_BattleField1Id",
+                        column: x => x.BattleField1Id,
+                        principalTable: "BattleFields",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Games_Players_Player2Id",
-                        column: x => x.Player2Id,
-                        principalTable: "Players",
+                        name: "FK_Games_BattleFields_BattleField2Id",
+                        column: x => x.BattleField2Id,
+                        principalTable: "BattleFields",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "BattleFields",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    GameId = table.Column<int>(type: "int", nullable: false),
-                    PlayerId = table.Column<int>(type: "int", nullable: false),
-                    Rows = table.Column<int>(type: "int", nullable: false),
-                    Columns = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_BattleFields", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_BattleFields_Games_GameId",
-                        column: x => x.GameId,
-                        principalTable: "Games",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_BattleFields_Players_PlayerId",
-                        column: x => x.PlayerId,
-                        principalTable: "Players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -101,7 +90,6 @@ namespace Battleship_Websockets.Migrations
                     RowBegin = table.Column<int>(type: "int", nullable: false),
                     ColumnBegin = table.Column<int>(type: "int", nullable: false),
                     Orientation = table.Column<int>(type: "int", nullable: false),
-                    Length = table.Column<int>(type: "int", nullable: false),
                     State = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -151,8 +139,9 @@ namespace Battleship_Websockets.Migrations
                     ShipId = table.Column<int>(type: "int", nullable: false),
                     Number = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    Row = table.Column<int>(type: "int", nullable: false),
-                    Column = table.Column<int>(type: "int", nullable: false)
+                    RowNumber = table.Column<int>(type: "int", nullable: false),
+                    ColumnNumber = table.Column<int>(type: "int", nullable: false),
+                    ShipId1 = table.Column<int>(type: "int", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -163,39 +152,28 @@ namespace Battleship_Websockets.Migrations
                         principalTable: "Ships",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ShipParts_Ships_ShipId1",
+                        column: x => x.ShipId1,
+                        principalTable: "Ships",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BattleFields_GameId",
-                table: "BattleFields",
-                column: "GameId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_BattleFields_PlayerId",
-                table: "BattleFields",
-                column: "PlayerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Games_BattleField1Id",
                 table: "Games",
-                column: "BattleField1Id",
-                unique: true);
+                column: "BattleField1Id");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Games_BattleField2Id",
                 table: "Games",
-                column: "BattleField2Id",
-                unique: true);
+                column: "BattleField2Id");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Games_Player1Id",
-                table: "Games",
-                column: "Player1Id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Games_Player2Id",
-                table: "Games",
-                column: "Player2Id");
+                name: "IX_ShipParts_ShipId1",
+                table: "ShipParts",
+                column: "ShipId1");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Ships_BattleFieldId",
@@ -211,29 +189,12 @@ namespace Battleship_Websockets.Migrations
                 name: "IX_Shots_PlayerId",
                 table: "Shots",
                 column: "PlayerId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Games_BattleFields_BattleField1Id",
-                table: "Games",
-                column: "BattleField1Id",
-                principalTable: "BattleFields",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Games_BattleFields_BattleField2Id",
-                table: "Games",
-                column: "BattleField2Id",
-                principalTable: "BattleFields",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_BattleFields_Games_GameId",
-                table: "BattleFields");
+            migrationBuilder.DropTable(
+                name: "Games");
 
             migrationBuilder.DropTable(
                 name: "PlayerGameManyToMany");
@@ -248,13 +209,10 @@ namespace Battleship_Websockets.Migrations
                 name: "Ships");
 
             migrationBuilder.DropTable(
-                name: "Games");
+                name: "Players");
 
             migrationBuilder.DropTable(
                 name: "BattleFields");
-
-            migrationBuilder.DropTable(
-                name: "Players");
         }
     }
 }

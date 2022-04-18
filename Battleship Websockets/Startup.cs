@@ -31,7 +31,7 @@ namespace Battleship_Websockets
             services.AddDbContext<GameDBContext>(options =>
                 options.UseSqlServer(
                     Configuration.GetConnectionString("DefaultConnection")));
-            services.AddScoped<IGameRepository, GameRepository>();
+            //services.AddScoped<IGameRepository, GameRepository>();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
