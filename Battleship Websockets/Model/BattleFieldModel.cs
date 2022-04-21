@@ -9,28 +9,19 @@ namespace Battleship_Websockets.Model
 {
     public class BattleFieldModel
     {
-        public BattleFieldModel(GameModel game, int playerId, int rows, int columns)
+        public BattleFieldModel(int gameId, int playerId, int rows, int columns)
         {
-            GameId = game.Id;
-            //Game = game;
+            GameId = gameId;
             PlayerId = playerId;
             Rows = rows;
             Columns = columns;
         }
 
-        public BattleFieldModel()
-        {
-             
-        }
-
         [Key]
         public int Id { get; set; }
-        //public int GameId { get; set; }
         public int PlayerId { get; set; }
         public int Rows { get; set; }
         public int Columns { get; set; }
-
         public int GameId { get; set; }
-        //public PlayerModel Player { get; set; }
     }
 }

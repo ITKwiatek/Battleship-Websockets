@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 namespace Battleship_Websockets.Model.Response
 {
-    public interface IResponse
+    public class ServerErrorResponse : IResponse
     {
-        public ResponseTypes ResponseType { get; }
+        public ResponseTypes ResponseType { get; } = ResponseTypes.ServerError;
     }
 }

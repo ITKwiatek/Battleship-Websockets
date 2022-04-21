@@ -13,12 +13,14 @@ namespace Battleship_Websockets.Service
     public class MoveService
     {
         private string connId;
-        private MoveMessage move;
+        private MoveMessageDto move;
         private readonly List<ShotModel> _oldShots;
         private readonly BattleFieldModel _battleField;
+        private readonly GameDBContext _db;
 
-        public MoveService(string connId, MoveMessage move)
+        public MoveService(string connId, MoveMessageDto move)
         {
+            _db = new GameDBContext();
             this.connId = connId;
             this.move = move;
             _oldShots = GetOldShots();
@@ -27,71 +29,60 @@ namespace Battleship_Websockets.Service
 
 
 
-        public MoveResponse NextMove()
+        public IMoveResponse NextMove()
         {
             (int col, int row) cell = RandomizeAvailableCell();
-            var shootedShipState = TryShootTheShip(cell);
+            SaveShot(cell);
+            (bool shipHitted, ShipModel ship) = TryShootTheShip(cell);
 
-            MoveResponse response = new();
-            response.Col = cell.col;
-            response.Row = cell.row;
-            response.ShipStatus = shootedShipState;
-            response.ActionReceiver(move.PlayerId);
+            var gameStateService = new GameStateService(_battleField.Id);
 
+            var responseBuilder = new MoveResponseBuilder(cell, _battleField.Id, ship, shipHitted);
 
+            var response = responseBuilder.BuildMoveResponse();
+            response.GameStatus = gameStateService.CheckGameStatus();
+
+            return response;
         }
 
-        private ShipStatus TryShootTheShip((int col, int row) cell)
-        {
-            ShipPart shipPart;
-            using (var db = new GameDBContext())
-            {
-                shipPart = db.ShipParts.FirstOrDefault(sp => sp.Ship.BattleFieldId == _battleField.Id && sp.ColumnNumber == cell.col && sp.RowNumber == cell.row);
-            }
-
+        private (bool shipHited, ShipModel ship) TryShootTheShip((int col, int row) cell)
+        {      
+            var shipPart = _db.GetShipPartByCellAndBattleField(cell, _battleField.Id);
+            
             bool shipHited = DestroyShipPart(shipPart);
 
-            if (shipHited)
-                DamageTheShip(shipPart);
+            if (!shipHited)
+                return (shipHited, null);
 
-            return 
+            DamageTheShip(shipPart);
+
+            return (shipHited, shipPart.Ship);
         }
 
         private ShipStatus DamageTheShip(ShipPart shipPart)
-        {
-            ShipModel ship;
-            List<ShipPart> destroyedShipParts;
-            using (var db = new GameDBContext())
-            {
-                ship = db.Ships.FirstOrDefault(sp => sp.Id == shipPart.Ship.Id);
+        {          
+            var ship = shipPart.Ship;
+            var destroyedShipParts = _db.GetShipPartsByShipIdAndState(ship.Id, ShipPartStatus.Destroyed);
+            if (ship.Length == destroyedShipParts.Count)
+                ship.State = ShipStatus.Destroyed;
+            else
+                ship.State = ShipStatus.Damaged;
 
-                destroyedShipParts = db.ShipParts.Where(sp => sp.Ship.Id == ship.Id && sp.Status == ShipPartStatus.Destroyed).ToList();
-                if (ship.Length == destroyedShipParts.Count)
-                    ship.State = ShipStatus.Destroyed;
-                else
-                    ship.State = ShipStatus.Damaged;
-
-                db.SaveChanges();
-            }
+            _db.UpdateShip(ship);
 
             return ship.State;
         }
 
         private bool DestroyShipPart(ShipPart shipPart)
         {
-
             if (shipPart == null)
-            {
                 return false;
-            }
-            using (var db = new GameDBContext())
-            {
-                shipPart.Status = ShipPartStatus.Destroyed;
 
-                db.SaveChanges();
-            }
+            shipPart.Status = ShipPartStatus.Destroyed;
 
-            return true;
+            bool updated = _db.UpdateShipPart(shipPart);
+
+            return updated;
         }
 
         private (int,int) RandomizeAvailableCell()
@@ -106,30 +97,24 @@ namespace Battleship_Websockets.Service
         }
 
         private List<ShotModel> GetOldShots()
-        {
-            List<ShotModel> shotsDone;
-            using (var db = new GameDBContext())
-            {
-                shotsDone = db.Shots.Where(s => s.BattleFieldId == move.BattleFieldId).ToList();
-            }
+        {        
+            var shotsDone = _db.GetShotsByBattleFieldId(move.BattleFieldId);
+            if (shotsDone == null)
+                return new List<ShotModel>();
 
             return shotsDone;
         }
 
         private BattleFieldModel GetBattleField()
-        {
-            BattleFieldModel battleField;
-            using (var db = new GameDBContext())
-            {
-                battleField = db.BattleFields.FirstOrDefault(b => b.Id == move.BattleFieldId);
-            }
+        {           
+            var battleField = _db.GetBattleFieldById(move.BattleFieldId);
 
             return battleField;
         }
 
         private (int, int) RandomizeMove()
         {
-            Random rand = new();
+            var rand = new Random();
 
             int col = rand.Next(0, _battleField.Columns);
             int row = rand.Next(0, _battleField.Rows);
@@ -147,6 +132,12 @@ namespace Battleship_Websockets.Service
             };
 
             return true;
+        }
+
+        private void SaveShot((int col, int row) cell)
+        {
+            var shot = new ShotModel(_battleField.Id, cell.row, cell.col);
+            _db.SaveShot(shot);
         }
     }
 }

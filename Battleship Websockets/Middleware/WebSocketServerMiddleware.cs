@@ -9,6 +9,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using Battleship_Websockets.Model.Response;
 
 namespace Battleship_Websockets.Middleware
 {
@@ -28,7 +31,6 @@ namespace Battleship_Websockets.Middleware
             if (context.WebSockets.IsWebSocketRequest)
             {
                 WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                System.Diagnostics.Debug.WriteLine("Connected");
 
                 string ConnId = _manager.AddSocket(webSocket);
                 await SendConnIdAsync(webSocket, ConnId);
@@ -40,10 +42,10 @@ namespace Battleship_Websockets.Middleware
                         var JSON = Encoding.UTF8.GetString(buffer, 0, result.Count);
                         var received = JsonConvert.DeserializeObject<dynamic>(JSON);
                         string command = received.Command.ToString();
+                        string from = received.From.ToString();
                         var message = JsonConvert.DeserializeObject<dynamic>(received.Message.ToString());
                         var response = commandService.RunCommand(command, message, ConnId);
-                        //System.Diagnostics.Debug.WriteLine($"Received message {Encoding.UTF8.GetString(buffer, 0, result.Count)}");
-                        await RouteJSONMessageAsync(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                        await RouteJSONMessageAsync(from, response);
                         return;
                     }
                     else if (result.MessageType == WebSocketMessageType.Close)
@@ -60,20 +62,17 @@ namespace Battleship_Websockets.Middleware
             }
         }
 
-        public async Task RouteJSONMessageAsync(string message)
+        public async Task RouteJSONMessageAsync(string sendTo, dynamic obj)
         {
-            var routeOb = JsonConvert.DeserializeObject<dynamic>(message);
-
-            if(Guid.TryParse(routeOb.From.ToString(), out Guid guidOutput))
+            if(Guid.TryParse(sendTo, out Guid guidOutput))
             {
-                System.Diagnostics.Debug.WriteLine("Targeted");
-                var sock = _manager.GetAllSockets().FirstOrDefault(s => s.Key == routeOb.From.ToString());
+                var sock = _manager.GetAllSockets().FirstOrDefault(s => s.Key == sendTo);
 
                 if (sock.Value != null)
                 {
                     if (sock.Value.State == WebSocketState.Open)
                     {
-                       await sock.Value.SendAsync(Encoding.UTF8.GetBytes(routeOb.Message.ToString() + " Response for " + routeOb.From),
+                       await sock.Value.SendAsync(Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(obj)),
                        WebSocketMessageType.Text, true, CancellationToken.None);
                     }
                     else
@@ -82,25 +81,13 @@ namespace Battleship_Websockets.Middleware
                     }
                 }
             }
-            else
-            {
-                System.Diagnostics.Debug.WriteLine("Broadcast");
-                foreach(var sock in _manager.GetAllSockets())
-                {
-                    if(sock.Value.State == WebSocketState.Open)
-                    {
-                        await sock.Value.SendAsync(Encoding.UTF8.GetBytes(routeOb.Message.ToString() + " Response"),
-                        WebSocketMessageType.Text, true, CancellationToken.None);
-                    }
-                }
-            }
         }
 
         private async Task SendConnIdAsync(WebSocket socket, string connId)
         {
-            var buffer = Encoding.UTF8.GetBytes("ConnId: " + connId);
+            var connResponse = new ConnectResponse(connId);
+            var buffer = Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(connResponse));
 
-            System.Diagnostics.Debug.WriteLine("Sending back...");
             await socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
         }
 

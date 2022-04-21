@@ -19,11 +19,11 @@ namespace Battleship_Websockets.Model.Ship
         [Key]
         public int Id { get; set; }
         public int BattleFieldId { get; set; }
-        //public BattleFieldModel BattleField { get; set; }
         public int RowBegin { get; set; }
         public int ColumnBegin { get; set; }
         public Orientation Orientation { get; set; }
         public ShipStatus State { get; set; }
+        [NotMapped]
         public List<ShipPart> ShipParts { get; set; }
         public ShipTypes ShipType
         {

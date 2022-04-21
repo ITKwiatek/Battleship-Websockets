@@ -1,5 +1,6 @@
 ﻿using Battleship_Websockets.Data;
 using Battleship_Websockets.Model;
+using Battleship_Websockets.Model.Response;
 using Battleship_Websockets.Model.Ship;
 using Battleship_Websockets.Model.Shot;
 using System;
@@ -15,37 +16,32 @@ namespace Battleship_Websockets.Service
         private const string Start = "Start";
         private const string Move = "Move";
 
-
-        public CommandService()
+        public dynamic RunCommand(string command, dynamic message, string connId)
         {
-        }
-
-        public string RunCommand(string command, dynamic message, string connId)
-        {
+            IResponse response = new ServerErrorResponse();
             switch (command)
             {
                 case Connect:
-                    System.Diagnostics.Debug.WriteLine("Run Connectiong...");
+                    response = new ConnectResponse(connId);
                     break;
-
                 case Start:
-                    System.Diagnostics.Debug.WriteLine("Start Game...");
-                    GamePropertiesDto gameProperties = Newtonsoft.Json.JsonConvert.DeserializeObject<GamePropertiesDto>(message.ToString());
-                    GameCreatorService gameCreator = new(connId, gameProperties) ;
-                    gameCreator.CreateGame();
+                    var gameProperties = Newtonsoft.Json.JsonConvert.DeserializeObject<GamePropertiesDto>(message.ToString());
+                    var gameCreator = new GameCreatorService(connId, gameProperties) ;
+                    var game = gameCreator.CreateGame();
+                    response = new GameStartResponse(game.BattleField1.Id, game.BattleField2.Id, gameProperties.FirstTurn);
                     break;
                 case Move:
-                    System.Diagnostics.Debug.WriteLine("Move...");
-                    MoveMessage move = Newtonsoft.Json.JsonConvert.DeserializeObject<MoveMessage>(message.ToString());
-                    var moveservice = new MoveService(connId, move);
-                    moveservice.NextMove();
+                    int bfId = Int32.Parse(message.ToString());
+                    var move = new MoveMessageDto(bfId);
+                    var moveService = new MoveService(connId, move);
+                    response = moveService.NextMove();
                     break;
                 default:
                     System.Diagnostics.Debug.WriteLine($"Command: {command} not known");
                     break;
             }
 
-            return "Implement me";
+            return response;
         }
     }
 }

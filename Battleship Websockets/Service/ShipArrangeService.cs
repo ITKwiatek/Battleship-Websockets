@@ -49,7 +49,7 @@ namespace Battleship_Websockets.Service
 
         private List<ShipPart> CreateShipParts(ShipModel ship)
         {
-            List<ShipPart> shipParts = new();
+            var shipParts = new List<ShipPart>();
             for(int i=0; i<ship.Length; i++)
             {
                     if(ship.Orientation == Orientation.Horizontal)
@@ -69,17 +69,13 @@ namespace Battleship_Websockets.Service
 
         private List<(int,int)> PrepareCells(ShipModel ship)
         {
-            List<(int col, int row)> cells = new();
+            var cells = new List<(int col, int row)>();
                 cells = LookForFreeCells(ship.Orientation, ship.Length);
 
                 if(areAllCellsAvailable(cells))
-                {
                     markTakenFields(cells);
-                }
                 else
-                {
                     cells = PrepareCells(ship);
-                }
 
             return cells;
         }
@@ -108,7 +104,7 @@ namespace Battleship_Websockets.Service
 
         private List<(int,int)> LookForFreeCells(Orientation orientation, int length)
         {
-            List<(int, int)> cells = new();
+            var cells = new List<(int col, int row)>();
             bool allCellsAreAvailable = true;
             if (orientation == Orientation.Horizontal)
             {
@@ -154,7 +150,7 @@ namespace Battleship_Websockets.Service
 
         private (int,int) RandomizeFreeCell(int maxCol, int maxRow)
         {
-            Random random = new();
+            var random = new Random();
             (int col, int row) cell;
             cell.col = random.Next(0, maxCol);
             cell.row = random.Next(0, maxRow);

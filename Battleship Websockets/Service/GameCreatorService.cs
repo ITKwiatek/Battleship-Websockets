@@ -20,6 +20,7 @@ namespace Battleship_Websockets.Service
         private BattleFieldModel battleField1;
         private BattleFieldModel battleField2;
         private GameModel _game;
+        private readonly GameDBContext _db;
 
 
         public GameCreatorService(string connId, GamePropertiesDto gameProperties)
@@ -31,82 +32,28 @@ namespace Battleship_Websockets.Service
             _columns = gameProperties.BattleFieldColumns;
             _rows = gameProperties.BattleFieldRows;
             ships = gameProperties.Ships;
+            _db = new GameDBContext();
         }
 
         public GameModel CreateGame()
         {
-            _game = new GameModel(
-                _connId,
-                _playerTurn,
-                _player1Id,
-                _player2Id,
-                _rows,
-                _columns
-                );
+            _game = new GameModel(_connId, _playerTurn, _player1Id, _player2Id, _rows, _columns);
 
-            battleField1 = CrateBattleField(_game, _player1Id);
-            battleField2 = CrateBattleField(_game, _player2Id);
+            battleField1 = CrateBattleField(_game.Id, _player1Id);
+            battleField2 = CrateBattleField(_game.Id, _player2Id);
 
-            SaveGame();
-            SaveBattleFields();
+            _game.BattleField1 = battleField1;
+            _game.BattleField2 = battleField2;
+            _db.SaveGame(_game);
+
             PlaceShipsOnMap(battleField1);
             PlaceShipsOnMap(battleField2);
             return _game;
         }
 
-        private GameModel SaveGame()
+        public BattleFieldModel CrateBattleField(int gameId, int playerId)
         {
-            using (var db = new GameDBContext())
-            {
-                try
-                {
-                    _game.BattleField1 = battleField1;
-                    _game.BattleField2 = battleField2;
-                    db.Games.Add(_game);
-                    db.SaveChanges();
-                }
-                catch (Exception e)
-                {
-                    System.Diagnostics.Debug.WriteLine("Game saving failed... " + e.Message);
-                }
-            }
-
-            return _game;
-        }
-
-        private (BattleFieldModel, BattleFieldModel) SaveBattleFields()
-        {
-            using (var db = new GameDBContext())
-            {
-                try
-                {
-                    battleField1.GameId = _game.Id;
-                    battleField2.GameId = _game.Id;
-                    db.SaveChanges();
-                }
-                catch (Exception e)
-                {
-                    System.Diagnostics.Debug.WriteLine("BattleFields saving failed... " + e.Message);
-                }
-            }
-
-            return (battleField1, battleField1);
-        }
-
-        private List<ShipModel> SaveShips(List<ShipModel> createdShips)
-        { 
-            using (var db = new GameDBContext())
-            {
-                db.Ships.AddRange(createdShips);
-                db.SaveChanges();
-            }
-
-            return createdShips;
-        }
-
-        public BattleFieldModel CrateBattleField(GameModel game, int playerId)
-        {
-            BattleFieldModel battleField = new(game, playerId, _rows, _columns);
+            var battleField = new BattleFieldModel(gameId, playerId, _rows, _columns);
 
             return battleField;
         }
@@ -117,23 +64,18 @@ namespace Battleship_Websockets.Service
                 return;
             ships = ships.OrderByDescending(s => s.ShipType).ToList();
 
-            ShipArrangeService service = new(battleField1);
+            var service = new ShipArrangeService(battleField1);
             service.CreateShips(ships);
 
             service = new(battleField2);
-            List<ShipModel>createdShips = service.CreateShips(ships);
+            var createdShips = service.CreateShips(ships);
 
             createdShips.ForEach(s =>
             {
                 s.BattleFieldId = battleField.Id;
             });
 
-            SaveShips(createdShips);
-        }
-
-        private bool SaveGameAndBattleShips(GameModel game, BattleFieldModel bf1, BattleFieldModel bf2)
-        {
-            return true;
+            _db.SaveShips(createdShips);
         }
     }
 }

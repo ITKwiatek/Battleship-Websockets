@@ -8,13 +8,19 @@ namespace Battleship_Websockets.Model
 {
     public class ShotModel
     {
+        public ShotModel(int battleFieldId, int rowNumber, int columnNumber)
+        {
+            BattleFieldId = battleFieldId;
+            RowNumber = rowNumber;
+            ColumnNumber = columnNumber;
+            MoveTime = DateTime.Now;
+        }
+
         [Key]
         public int Id { get; set; }
         public int BattleFieldId { get; set; }
         public int RowNumber { get; set; }
         public int ColumnNumber { get; set; }
-        public DateTime MoveTime { get; set; }
-        public int PlayerId { get; set; }
-        //public PlayerModel Player { get; set; }
+        public DateTime MoveTime { get; }
     }
 }

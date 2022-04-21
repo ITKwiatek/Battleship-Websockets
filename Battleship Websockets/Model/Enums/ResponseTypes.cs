@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 
 namespace Battleship_Websockets.Model.Response
 {
-    public class WinnerResponse : IResponse
+    public enum ResponseTypes
     {
-        public GameStatus GameStatus { get; set; }
-        public PlayersTurn ActionReceiver { get; set; }
+        Move, ConnectionId, Start, ServerError, Connected
     }
 }

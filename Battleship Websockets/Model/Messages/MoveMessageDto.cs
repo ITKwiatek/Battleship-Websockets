@@ -5,9 +5,13 @@ using System.Threading.Tasks;
 
 namespace Battleship_Websockets.Model.Shot
 {
-    public class MoveMessage
+    public class MoveMessageDto
     {
-        public int PlayerId { get; set; }
+        public MoveMessageDto(int battleFieldId)
+        {
+            BattleFieldId = battleFieldId;
+        }
+
         public int BattleFieldId { get; set; }
     }
 }
